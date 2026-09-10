@@ -301,8 +301,9 @@ function ItemSlot:UpdateSlotColor()
         end
 
         if self:IsNonCleanableSlot() then
-            SetItemButtonTextureVertexColor(self, 0.7, 0.25, 0.25)
-            normalTexture:SetVertexColor(0.7, 0.25, 0.25)
+            local r, g, b = Bagnon.Settings:GetNonCleanableSlotColor()
+            SetItemButtonTextureVertexColor(self, r, g, b)
+            normalTexture:SetVertexColor(r, g, b)
             return
         end
     end

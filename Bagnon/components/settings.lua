@@ -43,6 +43,7 @@ function Settings:HighlightingItemsByQuality()
 	return self:GetDB().highlightItemsByQuality
 end
 
+
 --highlight quest items
 function Settings:SetHighlightQuestItems(enable)
 	if self:HighlightingQuestItems() ~= enable then
@@ -54,6 +55,7 @@ end
 function Settings:HighlightingQuestItems()
 	return self:GetDB().highlightQuestItems
 end
+
 
 --highlight opacity
 function Settings:SetHighlightOpacity(value)
@@ -107,6 +109,7 @@ function Settings:ColoringBagSlots()
 	return self:GetDB().colorBagSlots
 end
 
+
 function Settings:SetItemSlotColor(type, r, g, b)
 	local oR, oG, oB = self:GetItemSlotColor(type)
 	if not(oR == r and oG == g and oB == b) then
@@ -124,6 +127,37 @@ function Settings:GetItemSlotColor(type)
 	local slotColor = self:GetDB().slotColors[type]
 	return unpack(slotColor)
 end
+
+
+--non-cleanable slot coloring
+function Settings:SetNonCleanableSlotColor(r, g, b)
+	local color = self:GetDB().nonCleanableSlotColor
+
+	if not color then
+		color = {0.7, 0.25, 0.25}
+		self:GetDB().nonCleanableSlotColor = color
+	end
+
+	if not(color[1] == r and color[2] == g and color[3] == b) then
+		color[1] = r
+		color[2] = g
+		color[3] = b
+
+		self:SendMessage('NON_CLEANABLE_SLOT_COLOR_UPDATE', r, g, b)
+	end
+end
+
+function Settings:GetNonCleanableSlotColor()
+	local color = self:GetDB().nonCleanableSlotColor
+
+	if not color then
+		color = {0.7, 0.25, 0.25}
+		self:GetDB().nonCleanableSlotColor = color
+	end
+
+	return unpack(color)
+end
+
 
 --enable frames
 function Settings:SetEnableFrame(frameID, enable)
@@ -188,6 +222,7 @@ function Settings:WillBlizzardBagPassThroughBeEnabled()
 	end
 	return self.enableBlizzardBagPassThrough
 end
+
 
 --item searching
 function Settings:SetTextSearch(search)

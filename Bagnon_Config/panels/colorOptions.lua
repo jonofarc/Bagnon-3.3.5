@@ -11,7 +11,14 @@ ColorOptions:Hide()
 Bagnon.ColorOptions = ColorOptions
 
 local SPACING = 4
-local ITEM_SLOT_COLOR_TYPES = {'ammo', 'trade', 'shard', 'keyring'}
+
+local ITEM_SLOT_COLOR_TYPES = {
+	'ammo',
+	'trade',
+	'shard',
+	'keyring',
+	'nonCleanable',
+}
 
 
 --[[
@@ -45,6 +52,7 @@ function ColorOptions:UpdateMessages()
 	self:RegisterMessage('ITEM_SLOT_COLOR_ENABLED_UPDATE')
 	self:RegisterMessage('ITEM_SLOT_COLOR_UPDATE')
 	self:RegisterMessage('ITEM_HIGHLIGHT_OPACITY_UPDATE')
+	self:RegisterMessage('NON_CLEANABLE_SLOT_COLOR_UPDATE')
 end
 
 function ColorOptions:ITEM_HIGHLIGHT_QUALITY_UPDATE(msg, enable)
@@ -60,13 +68,24 @@ function ColorOptions:ITEM_SLOT_COLOR_ENABLED_UPDATE(msg, enable)
 end
 
 function ColorOptions:ITEM_SLOT_COLOR_UPDATE(msg, type, r, g, b)
-	self:GetItemSlotColorSelector(type):SetColor(r, g, b, a)
+	local selector = self:GetItemSlotColorSelector(type)
+
+	if selector then
+		selector:SetColor(r, g, b)
+	end
+end
+
+function ColorOptions:NON_CLEANABLE_SLOT_COLOR_UPDATE(msg, r, g, b)
+	local selector = self:GetItemSlotColorSelector('nonCleanable')
+
+	if selector then
+		selector:SetColor(r, g, b)
+	end
 end
 
 function ColorOptions:ITEM_HIGHLIGHT_OPACITY_UPDATE(msg, value)
 	self:GetHighlightOpacitySlider():UpdateValue()
 end
-
 
 
 --[[
@@ -75,6 +94,7 @@ end
 
 function ColorOptions:OnShow()
 	self:UpdateMessages()
+	self:UpdateWidgets()
 end
 
 function ColorOptions:OnHide()
@@ -102,13 +122,28 @@ function ColorOptions:AddWidgets()
 	
 	local lastCheckbox = highightQuestItems
 	local lastSelector = nil
+
 	for i, type in self:GetColorTypes() do
 		local selector = self:CreateItemSlotColorSelector(type)
+
 		if i == 1 then
-			selector:SetPoint('TOPLEFT', lastCheckbox, 'BOTTOMLEFT', 4, -(SPACING + 4))
+			selector:SetPoint(
+				'TOPLEFT',
+				lastCheckbox,
+				'BOTTOMLEFT',
+				4,
+				-(SPACING + 4)
+			)
 		else
-			selector:SetPoint('TOPLEFT', lastSelector, 'BOTTOMLEFT', 0, -(SPACING + 6))
+			selector:SetPoint(
+				'TOPLEFT',
+				lastSelector,
+				'BOTTOMLEFT',
+				0,
+				-(SPACING + 6)
+			)
 		end
+
 		lastSelector = selector
 	end
 end
@@ -126,7 +161,10 @@ function ColorOptions:UpdateWidgets()
 	
 	for i, type in self:GetColorTypes() do
 		local selector = self:GetItemSlotColorSelector(type)
-		selector:UpdateColor()
+
+		if selector then
+			selector:UpdateColor()
+		end
 	end
 end
 
@@ -230,16 +268,31 @@ end
 
 --[[ Color Pickers ]]--
 
---frame color
+--item slot color
 function ColorOptions:CreateItemSlotColorSelector(type)
-	local selector = Bagnon.OptionsColorSelector:New(L['ItemSlotColor_' .. type], self, false)
+	local label = L['ItemSlotColor_' .. type]
+
+	--fallback label for the new setting
+	if not label and type == 'nonCleanable' then
+		label = 'Non-Cleanable Slot Color'
+	end
+
+	local selector = Bagnon.OptionsColorSelector:New(label, self, false)
 	selector.itemSlotType = type
 
 	selector.OnSetColor = function(self, r, g, b)
-		Bagnon.Settings:SetItemSlotColor(self.itemSlotType, r, g, b)
+		if self.itemSlotType == 'nonCleanable' then
+			Bagnon.Settings:SetNonCleanableSlotColor(r, g, b)
+		else
+			Bagnon.Settings:SetItemSlotColor(self.itemSlotType, r, g, b)
+		end
 	end
 
 	selector.GetColor = function(self)
+		if self.itemSlotType == 'nonCleanable' then
+			return Bagnon.Settings:GetNonCleanableSlotColor()
+		end
+
 		return Bagnon.Settings:GetItemSlotColor(self.itemSlotType)
 	end
 
